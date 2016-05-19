@@ -83,7 +83,7 @@ To configure credentials, invoke ``httpc_aws:set_credentials/2``:
 ```erlang
 application:start(httpc_aws).
 
-httpc:set_credentials("AKIDEXAMPLE", "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY"),
+httpc_aws:set_credentials("AKIDEXAMPLE", "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY"),
 
 RequestHeaders = [{"Content-Type", "application/x-amz-json-1.0"},
                   {"X-Amz-Target", "DynamoDB_20120810.ListTables"}],

@@ -13,6 +13,8 @@
 -define(SCHEME, https).
 
 -define(DEFAULT_PROFILE, "default").
+-define(DEFAULT_REGION, "us-east-1").
+
 -define(INSTANCE_AZ, ["placement", "availability-zone"]).
 -define(INSTANCE_HOST, "169.254.169.254").
 -define(INSTANCE_CONNECT_TIMEOUT, 100).

@@ -18,7 +18,7 @@ A light-weight, relatively unopinionated AWS API client for Erlang 17.5+.
 
 Configuration for *httpc-aws* is can be provided in multiple ways. It is designed
 to behave similarly to the [AWS Command Line Interface](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html)
-with respect to providing region and configuratoin information. Additionally it
+with respect to providing region and configuration information. Additionally it
 has two methods, ``httpc_aws:set_region/1`` and ``httpc_aws:set_credentials/2``
 to allow for application specific configuration, bypassing the automatic configuration
 behavior.
@@ -83,7 +83,7 @@ To configure credentials, invoke ``httpc_aws:set_credentials/2``:
 ```erlang
 application:start(httpc_aws).
 
-httpc:set_credentials("AKIDEXAMPLE", "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY"),
+httpc_aws:set_credentials("AKIDEXAMPLE", "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY"),
 
 RequestHeaders = [{"Content-Type", "application/x-amz-json-1.0"},
                   {"X-Amz-Target", "DynamoDB_20120810.ListTables"}],

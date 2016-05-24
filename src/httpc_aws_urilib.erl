@@ -199,19 +199,21 @@ url_maybe_add_fragment(Value, URL) ->
 %% @copyright (C) 2010 Brian Buchanan. All rights reserved.
 %% ====================================================================
 
+
 url_encode(String) ->
   url_encode(String, []).
 url_encode([], Accum) ->
   lists:reverse(Accum);
 url_encode([Char|String], Accum)
   when Char >= $A, Char =< $Z;
-  Char >= $a, Char =< $z;
-  Char >= $0, Char =< $9;
-  Char =:= $-; Char =:= $_;
-  Char =:= $.; Char =:= $~ ->
+       Char >= $a, Char =< $z;
+       Char >= $0, Char =< $9;
+       Char =:= $-; Char =:= $_;
+       Char =:= $.; Char =:= $~ ->
   url_encode(String, [Char|Accum]);
 url_encode([Char|String], Accum) ->
   url_encode(String, utf8_encode_char(Char) ++ Accum).
+
 
 utf8_encode_char(Char) when Char > 16#7FFF, Char =< 16#7FFFF ->
   encode_char(Char band 16#3F + 16#80) ++
@@ -228,8 +230,10 @@ utf8_encode_char(Char) when Char > 16#7F, Char =< 16#7FF ->
 utf8_encode_char(Char) when Char =< 16#7F ->
   encode_char(Char).
 
+
 encode_char(Char) ->
   [hex_char(Char rem 16), hex_char(Char div 16), $%].
+
 
 hex_char(C) when C < 10 -> $0 + C;
 hex_char(C) when C < 16 -> $A + C - 10.

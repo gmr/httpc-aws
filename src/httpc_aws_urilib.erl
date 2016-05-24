@@ -193,12 +193,12 @@ url_maybe_add_fragment(Value, URL) ->
     string:join([URL, Fragment], "#").
 
 
-
 %% ====================================================================
 %% The following code originally from erlcloud
 %% https://github.com/erlcloud/erlcloud
 %% @copyright (C) 2010 Brian Buchanan. All rights reserved.
 %% ====================================================================
+
 
 encode_query_term(Key, [], no_assignment) ->
   [Key];

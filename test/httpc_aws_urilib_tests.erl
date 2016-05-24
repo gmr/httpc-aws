@@ -176,14 +176,9 @@ parse_test_() ->
 decode_test_() ->
   [
     {"percent_decode", fun() ->
-        Value = "foo%2fbar%20baz",
+        Value = "foo%2Fbar%20baz",
         Expect = "foo/bar baz",
         ?assertEqual(Expect, httpc_aws_urilib:percent_decode(Value))
-     end},
-    {"plus_decode", fun() ->
-      Value = "foo/bar+baz",
-      Expect = "foo/bar baz",
-      ?assertEqual(Expect, httpc_aws_urilib:plus_decode(Value))
      end}
   ].
 
@@ -192,17 +187,12 @@ encode_test_() ->
   [
     {"percent_encode", fun() ->
       Value = "foo/bar baz",
-      Expect = "foo%2fbar%20baz",
+      Expect = "foo%2Fbar%20baz",
       ?assertEqual(Expect, httpc_aws_urilib:percent_encode(Value))
      end},
     {"percent_encode unicode", fun() ->
       Value = "foo/bar✈baz",
-      Expect = "foo%2fbar%c0%88baz",
+      Expect = "foo%2Fbar%C0%88baz",
       ?assertEqual(Expect, httpc_aws_urilib:percent_encode(Value))
-     end},
-    {"plus_encode", fun() ->
-      Value = "foo/bar baz",
-      Expect = "foo%2fbar+baz",
-      ?assertEqual(Expect, httpc_aws_urilib:plus_encode(Value))
      end}
   ].

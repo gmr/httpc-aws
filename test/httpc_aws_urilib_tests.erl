@@ -1,3 +1,4 @@
+%% -*- coding: utf-8 -*-
 -module(httpc_aws_urilib_tests).
 
 -include_lib("eunit/include/eunit.hrl").
@@ -191,8 +192,8 @@ encode_test_() ->
       ?assertEqual(Expect, httpc_aws_urilib:percent_encode(Value))
      end},
     {"percent_encode unicode", fun() ->
-      Value = "foo/bar✈baz",
-      Expect = "foo%2Fbar%E2%9C%88baz",
+      Value = "foo/bar✈baz/᯽",
+      Expect = "foo%2Fbar%E2%9C%88baz%2F%E1%AF%BD",
       ?assertEqual(Expect, httpc_aws_urilib:percent_encode(Value))
      end}
   ].

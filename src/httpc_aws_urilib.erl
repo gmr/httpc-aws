@@ -199,33 +199,6 @@ url_maybe_add_fragment(Value, URL) ->
 %% @copyright (C) 2010 Brian Buchanan. All rights reserved.
 %% ====================================================================
 
-
-encode_query_term(Key, [], no_assignment) ->
-  [Key];
-encode_query_term(Key, [], empty_assignment) ->
-  [Key, "="];
-encode_query_term(Key, Value, _) ->
-  [Key, "=", url_encode(value_to_string(Value))].
-
-%% encode an empty value query string differently based on the
-%% argument provided, this is based on the fact that S3 and SQS
-%% sign url differently, S3 requires that empty arguments have no
-%% '=' (/?acl) while SQS requires it (/?QueuePrefix=)
-%% default behaviour is adding '='
-make_query_string(Params) ->
-  make_query_string(Params, empty_assignment).
-
-make_query_string(Params, EmptyQueryOpt) ->
-  string:join([encode_query_term(Key, Value, EmptyQueryOpt) || {Key, Value} <-
-    Params, Value =/= none, Value =/= undefined], "&").
-
-value_to_string(Integer) when is_integer(Integer) -> integer_to_list(Integer);
-value_to_string(Atom) when is_atom(Atom) -> atom_to_list(Atom);
-value_to_string(Binary) when is_binary(Binary) -> Binary;
-value_to_string(String) when is_list(String) -> unicode:characters_to_binary(String).
-
-url_encode(Binary) when is_binary(Binary) ->
-  url_encode(unicode:characters_to_list(Binary));
 url_encode(String) ->
   url_encode(String, []).
 url_encode([], Accum) ->
@@ -239,24 +212,6 @@ url_encode([Char|String], Accum)
   url_encode(String, [Char|Accum]);
 url_encode([Char|String], Accum) ->
   url_encode(String, utf8_encode_char(Char) ++ Accum).
-
-url_encode_loose(Binary) when is_binary(Binary) ->
-  url_encode_loose(binary_to_list(Binary));
-url_encode_loose(String) ->
-  url_encode_loose(String, []).
-url_encode_loose([], Accum) ->
-  lists:reverse(Accum);
-url_encode_loose([Char|String], Accum)
-  when Char >= $A, Char =< $Z;
-  Char >= $a, Char =< $z;
-  Char >= $0, Char =< $9;
-  Char =:= $-; Char =:= $_;
-  Char =:= $.; Char =:= $~;
-  Char =:= $/; Char =:= $: ->
-  url_encode_loose(String, [Char|Accum]);
-url_encode_loose([Char|String], Accum)
-  when Char >=0, Char =< 255 ->
-  url_encode_loose(String, [hex_char(Char rem 16), hex_char(Char div 16), $% | Accum]).
 
 utf8_encode_char(Char) when Char > 16#7FFF, Char =< 16#7FFFF ->
   encode_char(Char band 16#3F + 16#80)

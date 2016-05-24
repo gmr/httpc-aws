@@ -192,8 +192,8 @@ encode_test_() ->
       ?assertEqual(Expect, httpc_aws_urilib:percent_encode(Value))
      end},
     {"percent_encode unicode", fun() ->
-      Value = "foo/bar✈baz/᯽",
-      Expect = "foo%2Fbar%E2%9C%88baz%2F%E1%AF%BD",
+      Value = "foo/bar✈baz/ʘ/耀",
+      Expect = "foo%2Fbar%E2%9C%88baz%2F%CA%98%2F%F0%88%80%80",
       ?assertEqual(Expect, httpc_aws_urilib:percent_encode(Value))
      end}
   ].

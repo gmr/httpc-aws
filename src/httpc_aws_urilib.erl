@@ -214,17 +214,17 @@ url_encode([Char|String], Accum) ->
   url_encode(String, utf8_encode_char(Char) ++ Accum).
 
 utf8_encode_char(Char) when Char > 16#7FFF, Char =< 16#7FFFF ->
-  encode_char(Char band 16#3F + 16#80)
-  ++ encode_char((16#3F band (Char bsr 6)) + 16#80)
-    ++ encode_char((16#3F band (Char bsr 12)) + 16#80)
-    ++ encode_char((Char bsr 18) + 16#F0);
+  encode_char(Char band 16#3F + 16#80) ++
+    encode_char((16#3F band (Char bsr 6)) + 16#80) ++
+    encode_char((16#3F band (Char bsr 12)) + 16#80) ++
+    encode_char((Char bsr 18) + 16#F0);
 utf8_encode_char(Char) when Char > 16#7FF, Char =< 16#7FFF ->
-  encode_char(Char band 16#3F + 16#80)
-  ++ encode_char((16#3F band (Char bsr 6)) + 16#80)
-    ++ encode_char((Char bsr 12) + 16#E0);
+  encode_char(Char band 16#3F + 16#80) ++
+    encode_char((16#3F band (Char bsr 6)) + 16#80) ++
+    encode_char((Char bsr 12) + 16#E0);
 utf8_encode_char(Char) when Char > 16#7F, Char =< 16#7FF ->
-  encode_char(Char band 16#3F + 16#80)
-  ++ encode_char((Char bsr 6) + 16#C0);
+  encode_char(Char band 16#3F + 16#80) ++
+    encode_char((Char bsr 6) + 16#C0);
 utf8_encode_char(Char) when Char =< 16#7F ->
   encode_char(Char).
 

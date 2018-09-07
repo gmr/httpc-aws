@@ -34,7 +34,7 @@ build_test_() ->
       ?assertEqual(Expect, Result)
      end},
     {"variation4", fun() ->
-      Expect = "https://www.google.com/search?foo",
+      Expect = "https://www.google.com/search?foo=",
       Value = #uri{scheme=https,
                    authority={{undefined, undefined}, "www.google.com", undefined},
                    path="/search",
@@ -43,7 +43,7 @@ build_test_() ->
       ?assertEqual(Expect, Result)
      end},
     {"variation5", fun() ->
-      Expect = "https://www.google.com/search?foo",
+      Expect = "https://www.google.com/search?foo=",
       Value = #uri{scheme=https,
                    authority={{undefined, undefined}, "www.google.com", 443},
                    path="/search",
@@ -52,7 +52,7 @@ build_test_() ->
       ?assertEqual(Expect, Result)
      end},
     {"variation6", fun() ->
-      Expect = "https://bar@www.google.com/search?foo",
+      Expect = "https://bar@www.google.com/search?foo=",
       Value = #uri{scheme=https,
                    authority={{"bar", undefined}, "www.google.com", 443},
                    path="/search",
@@ -61,7 +61,7 @@ build_test_() ->
       ?assertEqual(Expect, Result)
      end},
     {"variation7", fun() ->
-      Expect = "https://www.google.com/search?foo",
+      Expect = "https://www.google.com/search?foo=",
       Value = #uri{scheme=https,
                    authority={undefined, "www.google.com", 443},
                    path="/search",
@@ -70,7 +70,7 @@ build_test_() ->
       ?assertEqual(Expect, Result)
      end},
     {"variation8", fun() ->
-      Expect = "https://www.google.com/search?foo",
+      Expect = "https://www.google.com/search?foo=",
       Value = #uri{scheme=https,
                    authority={{"", ""}, "www.google.com", 443},
                    path="/search",
@@ -79,7 +79,7 @@ build_test_() ->
       ?assertEqual(Expect, Result)
      end},
     {"variation9", fun() ->
-      Expect = "https://bar@www.google.com/search?foo",
+      Expect = "https://bar@www.google.com/search?foo=",
       Value = #uri{scheme=https,
                    authority={{"bar", ""}, "www.google.com", 443},
                    path="/search",
@@ -89,7 +89,7 @@ build_test_() ->
       ?assertEqual(Expect, Result)
      end},
     {"variation10", fun() ->
-      Expect = "http://www.google.com/search?foo#bar",
+      Expect = "http://www.google.com/search?foo=#bar",
       Value = #uri{scheme=http,
                    authority={undefined, "www.google.com", undefined},
                    path="/search",

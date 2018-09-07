@@ -1,6 +1,6 @@
 # httpc-aws
 
-A light-weight, relatively unopinionated AWS API client for Erlang 18.0+.
+A light-weight, relatively unopinionated AWS API client for Erlang 21.0+.
 
 [![Build Status](https://travis-ci.org/gmr/httpc-aws.svg?branch=master)](https://travis-ci.org/gmr/httpc-aws)
 [![codecov.io](https://codecov.io/github/gmr/httpc-aws/coverage.svg?branch=master)](https://codecov.io/github/gmr/httpc-aws?branch=master)

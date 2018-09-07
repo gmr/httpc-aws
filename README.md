@@ -1,19 +1,26 @@
 # httpc-aws
 
-A light-weight, relatively unopinionated AWS API client for Erlang 17.5+.
+A light-weight, relatively unopinionated AWS API client for Erlang 18.0+.
 
 [![Build Status](https://travis-ci.org/gmr/httpc-aws.svg?branch=master)](https://travis-ci.org/gmr/httpc-aws)
 [![codecov.io](https://codecov.io/github/gmr/httpc-aws/coverage.svg?branch=master)](https://codecov.io/github/gmr/httpc-aws?branch=master)
 
 ## Supported Erlang Versions
 
- - 17.5
- - 18.0
- - 18.1
- - 18.2
- - 18.2.1
- - 18.3
- 
+  - 18.0
+  - 18.1
+  - 18.2
+  - 18.2.1
+  - 18.3
+  - 19.0
+  - 19.1
+  - 19.2
+  - 19.3
+  - 20.0
+  - 20.1
+  - 20.2
+  - 20.3
+
 ## Configuration
 
 Configuration for *httpc-aws* is can be provided in multiple ways. It is designed
@@ -40,10 +47,10 @@ The credentials values have the following precedence:
  - Environment variables
  - Credentials file
  - EC2 Instance Metadata Service
- 
+
 ### Environment Variables
 
-As with the AWS CLI, the following environment variables can be used to provide 
+As with the AWS CLI, the following environment variables can be used to provide
 configuration or to impact configuration behavior:
 
  - ``AWS_DEFAULT_PROFILE``
@@ -52,9 +59,9 @@ configuration or to impact configuration behavior:
  - ``AWS_SHARED_CREDENTIALS_FILE``
  - ``AWS_ACCESS_KEY_ID``
  - ``AWS_SECRET_ACCESS_KEY``
- 
+
 ## API Methods
- 
+
   Method                             | Description
  ------------------------------------|--------------------------------------------------------------------------------------------
  ``httpc_aws:set_region/1``          | Manually specify the AWS region to make requests to.
@@ -65,8 +72,8 @@ configuration or to impact configuration behavior:
  ``httpc_aws:post/4``                | Perform a POST request specifying the service, path, headers, and body.
  ``httpc_aws:request/5``             | Perform a request specifying the service, method, path, headers, and body.
  ``httpc_aws:request/6``             | Perform a request specifying the service, method, path, headers, body, and ``httpc:http_options().``
- ``httpc_aws:request/7``             | Perform a request specifying the service, method, path, headers, body,  ``httpc:http_options()``, and override the API endpoint. 
- 
+ ``httpc_aws:request/7``             | Perform a request specifying the service, method, path, headers, body,  ``httpc:http_options()``, and override the API endpoint.
+
 
 ## Example Usage
 
@@ -87,8 +94,8 @@ httpc_aws:set_credentials("AKIDEXAMPLE", "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEK
 
 RequestHeaders = [{"Content-Type", "application/x-amz-json-1.0"},
                   {"X-Amz-Target", "DynamoDB_20120810.ListTables"}],
-                  
-{ok, {Headers, Response}} = httpc_aws:post("dynamodb", "/", 
+
+{ok, {Headers, Response}} = httpc_aws:post("dynamodb", "/",
                                            "{\"Limit\": 20}",
                                            RequestHeaders).
 ```

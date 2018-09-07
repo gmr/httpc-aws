@@ -9,7 +9,9 @@
 -behavior(gen_server).
 
 %% API exports
--export([get/2, get/3,
+-export([delete/3,
+         get/2,
+         get/3,
          post/4,
          refresh_credentials/0,
          request/5, request/6, request/7,
@@ -35,6 +37,16 @@
 %%====================================================================
 %% exported wrapper functions
 %%====================================================================
+
+-spec delete(Service :: string(),
+             Path :: path(),
+             Headers :: headers()) -> result().
+%% @doc Perform a HTTP DELETE request to the AWS API for the specified service. The
+%%      response will automatically be decoded if it is either in JSON or XML
+%%      format.
+%% @end
+delete(Service, Path, Headers) ->
+  request(Service, delete, Path, "", Headers).
 
 -spec get(Service :: string(),
           Path :: path()) -> result().

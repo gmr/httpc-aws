@@ -1,6 +1,6 @@
   {application, httpc_aws,
   [{description, "A light-weight, relatively unopinionated AWS API client"},
-    {vsn, "0.3.0"},
+    {vsn, "0.3.1"},
     {applications, [
       kernel,
       stdlib,

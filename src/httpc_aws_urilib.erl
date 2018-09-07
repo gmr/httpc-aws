@@ -178,8 +178,8 @@ url_maybe_add_qargs(QArgs, URL) ->
 -spec url_maybe_encode_query_arg(tuple() | string()) -> string().
 url_maybe_encode_query_arg({K, V}) ->
     string:join([percent_encode(K), percent_encode(V)], "=");
-url_maybe_encode_query_arg(V) ->
-    percent_encode(V).
+url_maybe_encode_query_arg(K) ->
+    string:join([percent_encode(K), ""], "=").
 
 
 -spec url_maybe_add_fragment(string() | undefined, string()) -> string().

@@ -32,6 +32,8 @@
 -compile(export_all).
 -endif.
 
+-define(REQUEST_TIMEOUT, 120000).
+
 -include("httpc_aws.hrl").
 
 %%====================================================================
@@ -99,7 +101,7 @@ refresh_credentials() ->
 %%      format.
 %% @end
 request(Service, Method, Path, Body, Headers) ->
-  wpool:call(httpc_aws, {request, Service, Method, Headers, Path, Body, [], undefined}, available_worker, infinite).
+  wpool:call(httpc_aws, {request, Service, Method, Headers, Path, Body, [], undefined}, available_worker, ?REQUEST_TIMEOUT).
 
 
 -spec request(Service :: string(),
@@ -113,7 +115,7 @@ request(Service, Method, Path, Body, Headers) ->
 %%      format.
 %% @end
 request(Service, Method, Path, Body, Headers, HTTPOptions) ->
-  wpool:call(httpc_aws, {request, Service, Method, Headers, Path, Body, HTTPOptions, undefined}, available_worker, infinite).
+  wpool:call(httpc_aws, {request, Service, Method, Headers, Path, Body, HTTPOptions, undefined}, available_worker, ?REQUEST_TIMEOUT).
 
 
 -spec request(Service :: string(),
@@ -129,7 +131,7 @@ request(Service, Method, Path, Body, Headers, HTTPOptions) ->
 %%      if it is either in JSON or XML format.
 %% @end
 request(Service, Method, Path, Body, Headers, HTTPOptions, Endpoint) ->
-  wpool:call(httpc_aws, {request, Service, Method, Headers, Path, Body, HTTPOptions, Endpoint}, available_worker, infinite).
+  wpool:call(httpc_aws, {request, Service, Method, Headers, Path, Body, HTTPOptions, Endpoint}, available_worker, ?REQUEST_TIMEOUT).
 
 
 -spec set_credentials(access_key(), secret_access_key()) -> ok.

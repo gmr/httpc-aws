@@ -86,7 +86,7 @@ post(Service, Path, Body, Headers) ->
 %%      Instance metadata service.
 %% @end
 refresh_credentials() ->
-  gen_server:call(httpc_aws, refresh_credentials).
+  wpool:call(httpc_aws, refresh_credentials).
 
 
 -spec request(Service :: string(),
@@ -99,7 +99,7 @@ refresh_credentials() ->
 %%      format.
 %% @end
 request(Service, Method, Path, Body, Headers) ->
-  gen_server:call(httpc_aws, {request, Service, Method, Headers, Path, Body, [], undefined}).
+  wpool:call(httpc_aws, {request, Service, Method, Headers, Path, Body, [], undefined}, available_worker, infinite).
 
 
 -spec request(Service :: string(),
@@ -113,7 +113,7 @@ request(Service, Method, Path, Body, Headers) ->
 %%      format.
 %% @end
 request(Service, Method, Path, Body, Headers, HTTPOptions) ->
-  gen_server:call(httpc_aws, {request, Service, Method, Headers, Path, Body, HTTPOptions, undefined}).
+  wpool:call(httpc_aws, {request, Service, Method, Headers, Path, Body, HTTPOptions, undefined}, available_worker, infinite).
 
 
 -spec request(Service :: string(),
@@ -129,7 +129,7 @@ request(Service, Method, Path, Body, Headers, HTTPOptions) ->
 %%      if it is either in JSON or XML format.
 %% @end
 request(Service, Method, Path, Body, Headers, HTTPOptions, Endpoint) ->
-  gen_server:call(httpc_aws, {request, Service, Method, Headers, Path, Body, HTTPOptions, Endpoint}).
+  wpool:call(httpc_aws, {request, Service, Method, Headers, Path, Body, HTTPOptions, Endpoint}, available_worker, infinite).
 
 
 -spec set_credentials(access_key(), secret_access_key()) -> ok.
@@ -139,14 +139,14 @@ request(Service, Method, Path, Body, Headers, HTTPOptions, Endpoint) ->
 %%      configuration or the AWS Instance Metadata service.
 %% @end
 set_credentials(AccessKey, SecretAccessKey) ->
-  gen_server:call(httpc_aws, {set_credentials, AccessKey, SecretAccessKey}).
+  wpool:call(httpc_aws, {set_credentials, AccessKey, SecretAccessKey}, available_worker).
 
 
 -spec set_region(Region :: string()) -> ok.
 %% @doc Manually set the AWS region to perform API requests to.
 %% @end
 set_region(Region) ->
-  gen_server:call(httpc_aws, {set_region, Region}).
+  wpool:call(httpc_aws, {set_region, Region}, available_worker).
 
 
 %%====================================================================
@@ -154,8 +154,7 @@ set_region(Region) ->
 %%====================================================================
 
 start_link() ->
-  gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
-
+  wpool:start_pool(?MODULE, [{worker, {?MODULE, []}}]).
 
 -spec init(list()) -> {ok, state()}.
 init([]) ->
@@ -163,14 +162,11 @@ init([]) ->
   {_, State} = load_credentials(#state{region = Region}),
   {ok, State}.
 
-
 terminate(_, _) ->
   ok.
 
-
 code_change(_, _, State) ->
   {ok, State}.
-
 
 handle_call({request, Service, Method, Headers, Path, Body, Options, Host}, _From, State) ->
   {Response, NewState} = perform_request(State, Service, Method, Headers, Path, Body, Options, Host),
@@ -202,10 +198,8 @@ handle_call({set_region, Region}, _, State) ->
 handle_call(_Request, _From, State) ->
   {noreply, State}.
 
-
 handle_cast(_Request, State) ->
   {noreply, State}.
-
 
 handle_info(_Info, State) ->
   {noreply, State}.

@@ -1,6 +1,6 @@
 %% ====================================================================
 %% @author Gavin M. Roy <gavinmroy@gmail.com>
-%% @copyright 2016, Gavin M. Roy
+%% @copyright 2016-2018, Gavin M. Roy
 %% @doc Wrap a JSON parser to provide easy abstractions across
 %%      implementations and ensure a consistent return interface.
 %% @end

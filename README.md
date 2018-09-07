@@ -7,10 +7,7 @@ A light-weight, relatively unopinionated AWS API client for Erlang 18.0+.
 
 ## Supported Erlang Versions
 
-  - 20.0
-  - 20.1
-  - 20.2
-  - 20.3
+  - 21.0
 
 ## Configuration
 

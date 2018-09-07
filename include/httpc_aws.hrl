@@ -21,22 +21,26 @@
 -define(INSTANCE_CREDENTIALS, ["iam", "security-credentials"]).
 -define(INSTANCE_METADATA_BASE, ["latest", "meta-data"]).
 
+-type region() :: nonempty_string().
+
 -type access_key() :: nonempty_string().
 -type secret_access_key() :: nonempty_string().
--type expiration() :: nonempty_string() | undefined.
+-type expiration() :: calendar:datetime() | undefined.
 -type security_token() :: nonempty_string() | undefined.
--type region() :: nonempty_string() | undefined.
 
-
--type sc_ok() :: {ok, access_key(), secret_access_key(), expiration(), security_token()}.
+-type sc_ok() :: {ok,
+                  access_key(),
+                  secret_access_key(),
+                  expiration(),
+                  security_token()}.
 -type sc_error() :: {error, Reason :: atom()}.
 -type security_credentials() :: sc_ok() | sc_error().
 
--record(state, {access_key :: access_key(),
-                secret_access_key :: secret_access_key(),
+-record(state, {access_key :: access_key() | undefined,
+                secret_access_key :: secret_access_key() | undefined,
                 expiration :: expiration(),
                 security_token :: security_token(),
-                region :: region(),
+                region :: region() | undefined,
                 error :: atom() | string() | undefined}).
 -type state() :: #state{}.
 
@@ -60,13 +64,14 @@
               query :: undefined | query_args(),
               fragment :: undefined | fragment()}).
 
--type method() :: head | get | put | post | trace | options | delete.
+-type method() :: head | get | put | post | trace | options | delete | patch.
 -type http_version() :: string().
 -type status_code() :: integer().
 -type reason_phrase() :: string().
 -type status_line() :: {http_version(), status_code(), reason_phrase()}.
--type value() :: string() | integer().
--type headers() :: [{Field :: string(), Value :: value()}].
+-type field() :: string().
+-type value() :: string().
+-type headers() :: [{Field :: field(), Value :: value()}].
 -type body() :: string() | binary().
 
 -type ssl_options() :: [ssl_option()].
@@ -96,9 +101,9 @@
 
 -type httpc_result() :: {status_line(), headers(), body()} |
                         {status_code(), body()} |
-                        any().
+                        {error, term()}.
 
 -type result_ok() :: {ok, {ResponseHeaders :: headers(), Response :: list()}}.
--type result_error() :: {error, Message :: reason_phrase(), {ResponseHeaders :: headers(), Response :: list()}} |
+-type result_error() :: {error, Message :: reason_phrase(), {ResponseHeaders :: headers(), Response :: list()} | undefined} |
                         {error, credentials, Reason :: string()}.
 -type result() :: result_ok() | result_error().

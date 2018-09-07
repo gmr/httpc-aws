@@ -159,22 +159,22 @@ value(Profile, Key) ->
 
 
 -spec values(Profile :: string())
-  -> Settings :: list()
-  | {error, Reason :: atom()}.
+  -> Settings :: list() | {error, Reason :: atom()}.
 %% @doc Return the configuration data for the specified profile or an error
 %%      if the profile is not found.
 %% @end
 values(Profile) ->
-  case config_file_data() of
-    {error, Reason} ->
-      {error, Reason};
-    Settings ->
+  values(Profile, config_file_data()).
+
+
+-spec values(Profile :: string(), Settings :: list() | {error, Reason ::atom()}) ->
+  Settings :: list() | {error, Reason :: atom()}.
+values(_Profile, {error, Reason}) -> {error, Reason};
+values(Profile, Settings) ->
       Prefixed = lists:flatten(["profile ", Profile]),
       proplists:get_value(Profile, Settings,
                           proplists:get_value(Prefixed,
-                                              Settings, {error, undefined}))
-  end.
-
+                                              Settings, {error, undefined})).
 
 %% -----------------------------------------------------------------------------
 %% Private / Internal Methods
@@ -201,7 +201,7 @@ config_file(EnvVar) ->
   EnvVar.
 
 
--spec config_file_data() -> list() | {error, Reason :: atom()}.
+-spec config_file_data() -> {ok, list()} | {error, Reason :: atom()}.
 %% @doc Return the values from a configuration file as a proplist by section
 %% @end
 config_file_data() ->
@@ -238,9 +238,9 @@ credentials_file_data() ->
                (Key :: atom(), {error, Reason :: atom()}) -> {error, Reason :: atom()}.
 %% @doc Get the value for a key from a settings proplist.
 %% @end
+get_value(_, {error, Reason}) -> {error, Reason};
 get_value(Key, Settings) when is_list(Settings) ->
-  proplists:get_value(Key, Settings, {error, undefined});
-get_value(_, {error, Reason}) -> {error, Reason}.
+  proplists:get_value(Key, Settings, {error, undefined}).
 
 
 -spec home_path() -> string().
@@ -262,7 +262,7 @@ home_path(Value) -> Value.
 
 
 -spec ini_file_data(Path :: string())
-  -> {ok, list()} | {error, atom()}.
+  -> Settings :: list() | {error, atom()}.
 %% @doc Return the parsed ini file for the specified path.
 %% @end
 ini_file_data(Path) ->
@@ -270,7 +270,7 @@ ini_file_data(Path) ->
 
 
 -spec ini_file_data(Path :: string(), FileExists :: true | false)
-  -> {ok, list()} | {error, atom()}.
+  -> Settings :: list() | {error, atom()}.
 %% @doc Return the parsed ini file for the specified path.
 %% @end
 ini_file_data(Path, true) ->
@@ -507,13 +507,13 @@ lookup_region(Profile, false) ->
 lookup_region(_, Region) -> {ok, Region}.
 
 
--spec lookup_region_from_config(Settings :: list() | {error, enoent})
+-spec lookup_region_from_config(Settings :: list() | {error, Reason :: atom()})
   -> {ok, string()} | {error, undefined}.
 %% @doc Return the region from the local configuration file. If local config
 %%      settings are not found, try to lookup the region from the EC2 instance
 %%      metadata service.
 %% @end
-lookup_region_from_config({error, enoent}) ->
+lookup_region_from_config({error, _}) ->
   maybe_get_region_from_instance_metadata();
 lookup_region_from_config(Settings) ->
   lookup_region_from_settings(proplists:get_value(region, Settings)).
@@ -588,14 +588,14 @@ parse_az_response({ok, {{_, 200, _}, _, Body}})
 parse_az_response({ok, {{_, _, _}, _, _}}) -> {error, undefined}.
 
 
- -spec parse_body_response(httpc_result())
-   -> {ok, Value :: string()} | {error, Reason :: atom()}.
- %% @doc Parse the return response from the Instance Metadata service where the
- %%      body value is the string to process.
- %% end.
- parse_body_response({error, _}) -> {error, undefined};
- parse_body_response({ok, {{_, 200, _}, _, Body}}) -> {ok, Body};
- parse_body_response({ok, {{_, _, _}, _, _}}) -> {error, undefined}.
+-spec parse_body_response(httpc_result())
+  -> {ok, Value :: string()} | {error, Reason :: atom()}.
+%% @doc Parse the return response from the Instance Metadata service where the
+%%      body value is the string to process.
+%% end.
+parse_body_response({error, _}) -> {error, undefined};
+parse_body_response({ok, {{_, 200, _}, _, Body}}) -> {ok, Body};
+parse_body_response({ok, {{_, _, _}, _, _}}) -> {error, undefined}.
 
 
 -spec parse_credentials_response(httpc_result()) -> security_credentials().
@@ -613,8 +613,7 @@ parse_credentials_response({ok, {{_, 200, _}, _, Body}}) ->
    binary_to_list(proplists:get_value(<<"Token">>, Parsed))}.
 
 
--spec perform_http_get(string())
-  -> {ok, Result :: httpc_result()} | {error, Reason :: atom()}.
+-spec perform_http_get(string()) -> httpc_result().
 %% @doc Wrap httpc:get/4 to simplify Instance Metadata service requests
 %% @end
 perform_http_get(URL) ->

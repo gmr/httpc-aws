@@ -202,7 +202,7 @@ handle_info(_Info, State) ->
 %% Internal functions
 %%====================================================================
 
--spec endpoint(State :: state, Host :: string(),
+-spec endpoint(State :: state(), Host :: string(),
                Service :: string(), Path :: string()) -> string().
 %% @doc Return the endpoint URL, either by constructing it with the service
 %%      information passed in or by using the passed in Host value.
@@ -218,7 +218,19 @@ endpoint(_, Host, _, Path) ->
 %%      and region.
 %% @end
 endpoint_host(Region, Service) ->
-  lists:flatten(string:join([Service, Region, "amazonaws.com"], ".")).
+  lists:flatten(string:join([Service, Region, endpoint_tld(Region)], ".")).
+
+
+-spec endpoint_tld(Region :: region()) -> host().
+%% @doc Construct the endpoint hostname TLD for the request based upon the region.
+%%      See https://docs.aws.amazon.com/general/latest/gr/rande.html#ec2_region for details.
+%% @end
+endpoint_tld("cn-north-1") ->
+    "amazonaws.com.cn";
+endpoint_tld("cn-northwest-1") ->
+    "amazonaws.com.cn";
+endpoint_tld(_Other) ->
+    "amazonaws.com".
 
 
 -spec format_response(Response :: httpc_result()) -> result().
@@ -228,9 +240,12 @@ endpoint_host(Region, Service) ->
 %% @end
 format_response({ok, {{_Version, 200, _Message}, Headers, Body}}) ->
   {ok, {Headers, maybe_decode_body(get_content_type(Headers), Body)}};
+format_response({ok, {{_Version, 204, _Message}, Headers, _Body}}) ->
+  {ok, {Headers, []}};
 format_response({ok, {{_Version, StatusCode, Message}, Headers, Body}}) when StatusCode >= 400 ->
-  {error, Message, {Headers, maybe_decode_body(get_content_type(Headers), Body)}}.
-
+  {error, Message, {Headers, maybe_decode_body(get_content_type(Headers), Body)}};
+format_response({error, Reason}) ->
+  {error, Reason, undefined}.
 
 -spec get_content_type(Headers :: headers()) -> {Type :: string(), Subtype :: string()}.
 %% @doc Fetch the content type from the headers and return it as a tuple of
@@ -254,7 +269,7 @@ has_credentials(#state{access_key = Key}) when Key /= undefined -> true;
 has_credentials(_) -> false.
 
 
--spec expired_credentials(Expiration :: calendar:datetime()) -> true | false.
+-spec expired_credentials(Expiration :: expiration() | undefined) -> true | false.
 %% @doc Indicates if the date that is passed in has expired.
 %% end
 expired_credentials(undefined) -> false;
@@ -264,31 +279,31 @@ expired_credentials(Expiration) ->
   Now >= Expires.
 
 
--spec load_credentials(State :: state) -> {ok, state()} | {error, state()}.
+-spec load_credentials(State :: state()) -> {ok | error, state()}.
 %% @doc Load the credentials using the following order of configuration precedence:
 %%        - Environment variables
 %%        - Credentials file
 %%        - EC2 Instance Metadata Service
 %% @end
 load_credentials(#state{region = Region}) ->
-  case httpc_aws_config:credentials() of
-    {ok, AccessKey, SecretAccessKey, Expiration, SecurityToken} ->
+  load_credentials(httpc_aws_config:credentials(), Region).
+
+-spec load_credentials(security_credentials() | sc_error(), Region :: region() | undefined) -> {ok | error, state()}.
+load_credentials({ok, AccessKey, SecretAccessKey, Expiration, SecurityToken}, Region) ->
       {ok, #state{region = Region,
                   error = undefined,
                   access_key = AccessKey,
                   secret_access_key = SecretAccessKey,
                   expiration = Expiration,
                   security_token = SecurityToken}};
-    {error, Reason} ->
-      error_logger:error_msg("Failed to retrieve AWS credentials: ~p~n", [Reason]),
+load_credentials({error, Reason}, Region) ->
+      error_logger:error_msg("Could not load AWS credentials from environment variables, AWS_CONFIG_FILE, AWS_SHARED_CREDENTIALS_FILE or EC2 metadata endpoint: ~p.~n", [Reason]),
       {error, #state{region = Region,
                      error = Reason,
                      access_key = undefined,
                      secret_access_key = undefined,
                      expiration = undefined,
-                     security_token = undefined}}
-  end.
-
+                     security_token = undefined}}.
 
 -spec local_time() -> calendar:datetime().
 %% @doc Return the current local time.
@@ -298,7 +313,7 @@ local_time() ->
   Value.
 
 
--spec maybe_decode_body(MimeType :: string(), Body :: body()) -> list().
+-spec maybe_decode_body(ContentType :: {nonempty_string(), nonempty_string()}, Body :: body()) -> list() | body().
 %% @doc Attempt to decode the response body based upon the mime type that is
 %%      presented.
 %% @end.
@@ -321,9 +336,14 @@ parse_content_type(ContentType) ->
   {Type, Subtype}.
 
 
--spec perform_request(State :: state(), Service :: string(), Method :: method(),
-                      Headers :: headers(), Path :: path(), Body :: body(),
-                      Options :: http_options(), Host :: string() | undefined)
+-spec perform_request(State :: state(),
+                      Service :: string(),
+                      Method :: method(),
+                      Headers :: headers(),
+                      Path :: path(),
+                      Body :: body(),
+                      Options :: http_options(),
+                      Host :: host())
     -> {Result :: result(), NewState :: state()}.
 %% @doc Make the API request and return the formatted response.
 %% @end
@@ -332,10 +352,15 @@ perform_request(State, Service, Method, Headers, Path, Body, Options, Host) ->
                             Headers, Path, Body, Options, Host).
 
 
--spec perform_request_has_creds(true | false, State :: state(),
-                                Service :: string(), Method :: method(),
-                                Headers :: headers(), Path :: path(), Body :: body(),
-                                Options :: http_options(), Host :: string() | undefined)
+-spec perform_request_has_creds(true | false,
+                                State :: state(),
+                                Service :: string(),
+                                Method :: method(),
+                                Headers :: headers(),
+                                Path :: path(),
+                                Body :: body(),
+                                Options :: http_options(),
+                                Host :: host())
     -> {Result :: result(), NewState :: state()}.
 %% @doc Invoked after checking to see if there are credentials. If there are,
 %%      validate they have not or will not expire, performing the request if not,
@@ -348,10 +373,15 @@ perform_request_has_creds(false, State, _, _, _, _, _, _, _) ->
   perform_request_creds_error(State).
 
 
--spec perform_request_creds_expired(true | false, State :: state(),
-                                    Service :: string(), Method :: method(),
-                                    Headers :: headers(), Path :: path(), Body :: body(),
-                                    Options :: http_options(), Host :: string() | undefined)
+-spec perform_request_creds_expired(true | false,
+                                    State :: state(),
+                                    Service :: string(),
+                                    Method :: method(),
+                                    Headers :: headers(),
+                                    Path :: path(),
+                                    Body :: body(),
+                                    Options :: http_options(),
+                                    Host :: host())
   -> {Result :: result(), NewState :: state()}.
 %% @doc Invoked after checking to see if the current credentials have expired.
 %%      If they haven't, perform the request, otherwise try and refresh the
@@ -363,10 +393,14 @@ perform_request_creds_expired(true, State, Service, Method, Headers, Path, Body,
   perform_request_creds_refreshed(load_credentials(State), Service, Method, Headers, Path, Body, Options, Host).
 
 
--spec perform_request_creds_refreshed({ok, State :: state()} | {error, State :: state()},
-                                      Service :: string(), Method :: method(),
-                                      Headers :: headers(), Path :: path(), Body :: body(),
-                                      Options :: http_options(), Host :: string() | undefined)
+-spec perform_request_creds_refreshed({ok | error, State :: state()},
+                                      Service :: string(),
+                                      Method :: method(),
+                                      Headers :: headers(),
+                                      Path :: path(),
+                                      Body :: body(),
+                                      Options :: http_options(),
+                                      Host :: host())
     -> {Result :: result(), NewState :: state()}.
 %% @doc If it's been determined that there are credentials but they have expired,
 %%      check to see if the credentials could be loaded and either make the request
@@ -378,9 +412,14 @@ perform_request_creds_refreshed({error, State}, _, _, _, _, _, _, _) ->
   perform_request_creds_error(State).
 
 
--spec perform_request_with_creds(State :: state(), Service :: string(), Method :: method(),
-                                 Headers :: headers(), Path :: path(), Body :: body(),
-                                 Options :: http_options(), Host :: string() | undefined)
+-spec perform_request_with_creds(State :: state(),
+                                 Service :: string(),
+                                 Method :: method(),
+                                 Headers :: headers(),
+                                 Path :: path(),
+                                 Body :: body(),
+                                 Options :: http_options(),
+                                 Host :: host())
     -> {Result :: result(), NewState :: state()}.
 %% @doc Once it is validated that there are credentials to try and that they have not
 %%      expired, perform the request and return the response.
@@ -392,9 +431,13 @@ perform_request_with_creds(State, Service, Method, Headers, Path, Body, Options,
   perform_request_with_creds(State, Method, URI, SignedHeaders, ContentType, Body, Options).
 
 
--spec perform_request_with_creds(State :: state(), Method :: method(), URI :: string(),
-                                 Headers :: headers(), ContentType :: string() | undefined,
-                                 Body :: body(), Options :: http_options)
+-spec perform_request_with_creds(State :: state(),
+                                 Method :: method(),
+                                 URI :: string(),
+                                 Headers :: headers(),
+                                 ContentType :: string() | undefined,
+                                 Body :: body(),
+                                 Options :: http_options())
     -> {Result :: result(), NewState :: state()}.
 %% @doc Once it is validated that there are credentials to try and that they have not
 %%      expired, perform the request and return the response.
@@ -407,8 +450,7 @@ perform_request_with_creds(State, Method, URI, Headers, ContentType, Body, Optio
   {format_response(Response), State}.
 
 
--spec perform_request_creds_error(State :: state()) ->
-  {{error, Reason :: result_error()}, NewState :: state()}.
+-spec perform_request_creds_error(State :: state()) -> {{error, {credentials, any()}}, NewState :: state()}.
 %% @doc Return the error response when there are not any credentials to use with
 %%      the request.
 %% @end
@@ -416,8 +458,12 @@ perform_request_creds_error(State) ->
   {{error, {credentials, State#state.error}}, State}.
 
 
--spec sign_headers(State :: state(), Service :: string(), Method :: method(),
-                   URI :: string(), Headers :: headers(), Body :: body()) -> headers().
+-spec sign_headers(State :: state(),
+                   Service :: string(),
+                   Method :: method(),
+                   URI :: string(),
+                   Headers :: headers(),
+                   Body :: body()) -> headers().
 %% @doc Build the signed headers for the API request.
 %% @end
 sign_headers(#state{access_key = AccessKey,
